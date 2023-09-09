@@ -1,27 +1,90 @@
-# React + TypeScript + Vite
+# React TypeScript template with Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a [React](https://reactjs.org) + [TypeScript](https://www.typescriptlang.org/) boilerplate built with [Vite](https://vitejs.dev).
 
-Currently, two official plugins are available:
+## What's inside?
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [ReactJS](https://reactjs.org)
+- [Vite](https://vitejs.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Jest](https://jestjs.io)
+- [Testing Library](https://testing-library.com)
+- [Cypress](https://www.cypress.io)
+- [ESLint](https://eslint.org)
+- [Prettier](https://prettier.io)
+- [Polyfills](https://github.com/vitejs/vite/tree/main/packages/plugin-legacy#readme)
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+1. Create the project.
 
-- Configure the top-level `parserOptions` property like this:
+   ```bash
+   npx degit fabien-ml/react-ts-vite-template my-app
+   ```
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+2. Access the project directory.
+
+   ```bash
+   cd my-app
+   ```
+
+3. Initialize a git repository.
+
+   ```bash
+   git init
+   ```
+
+4. Install dependencies.
+
+   ```bash
+   npm install
+   ```
+
+5. Start dev server with hot reload at http://localhost:3000.
+   ```bash
+   npm run dev
+   ```
+
+## Recommended VS Code extensions
+
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+
+## Other commands
+
+### Lint commands
+
+```bash
+npm run lint
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### Build commands
+
+```bash
+npm run build
+```
+
+### Run the app in production mode at http://localhost:3000.
+
+```bash
+npm run serve
+```
+
+### Test commands
+
+- Run unit tests and watch
+  ```bash
+  npm run test:unit
+  ```
+- Run unit tests with coverage
+  ```bash
+  npm run test:unit:coverage
+  ```
+- Run e2e tests
+  ```bash
+  npm run test:e2e
+  ```
+
+## License
+
+This project is licensed under the MIT License.
