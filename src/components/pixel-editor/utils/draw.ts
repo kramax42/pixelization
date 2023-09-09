@@ -1,14 +1,14 @@
 import Paper, { Color, Group, Point, Size } from "paper";
 
-import { getPixelIndexByCoords } from "@/lib/get-pixel-index-by-coords";
 import { createRoundRectangle } from "@/lib/create-round-rectangle";
+import { getPixelIndexByCoords } from "@/lib/get-pixel-index-by-coords";
 import { TPaperMouseEvent, TPath, TPoint } from "@/types";
 
 const editorParams = {
   editorWidth: 600,
   editorHeight: 600,
-  xSize: 30,
-  ySize: 30,
+  xSize: 31,
+  ySize: 31,
 } as const;
 
 export const draw = () => {
@@ -20,8 +20,7 @@ export const draw = () => {
   const pixels: TPath[] = [];
   const parentGroup = new Group();
 
-  // const CORNER_RADIUS = 5;
-  const CORNER_RADIUS = 0;
+  const CORNER_RADIUS = 5;
   const sizeOfRectangle = new Size(rectWidth, rectHeight);
   const cornerSize = new Size(CORNER_RADIUS, CORNER_RADIUS);
 
