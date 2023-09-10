@@ -1,6 +1,6 @@
 import { Color, Path, Point, Segment } from "paper";
 
-import { TPoint, TSize } from "@/types";
+import { TColor, TPoint, TSize } from "@/types";
 
 type CornerSize = TSize | null;
 
@@ -13,12 +13,16 @@ type CreateRoundRectangleProps = {
     bottomLeft: CornerSize;
     bottomRight: CornerSize;
   };
+  fillColor?: TColor;
+  strokeColor?: TColor;
 };
 
 export const createRoundRectangle = ({
   putOnPoint,
   boxSize,
   cornersSize,
+  fillColor = new Color("grey"),
+  strokeColor = new Color("none"),
 }: CreateRoundRectangleProps) => {
   const topLeftPoint = putOnPoint;
   const topRightPoint = topLeftPoint.add(new Point(boxSize.width, 0));
@@ -126,8 +130,9 @@ export const createRoundRectangle = ({
     rectPath.add(bottomLeftPoint);
   }
 
-  const strokeColor = new Color("gold");
+  rectPath.fillColor = fillColor;
   rectPath.strokeColor = strokeColor;
   rectPath.strokeWidth = 0;
+
   return rectPath;
 };

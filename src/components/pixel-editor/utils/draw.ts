@@ -7,12 +7,23 @@ import { TPaperMouseEvent, TPath, TPoint } from "@/types";
 const editorParams = {
   editorWidth: 600,
   editorHeight: 600,
-  xSize: 31,
-  ySize: 31,
+  xSize: 61,
+  ySize: 61,
+  backgroundColor: new Color("black"),
+  brushColor: new Color("grey"),
+  brushHoverColor: new Color("rgba(100, 100, 100, 0.5)"),
 } as const;
 
 export const draw = () => {
-  const { editorWidth, editorHeight, xSize, ySize } = editorParams;
+  const {
+    editorWidth,
+    editorHeight,
+    xSize,
+    ySize,
+    backgroundColor,
+    brushColor,
+    brushHoverColor,
+  } = editorParams;
 
   const rectWidth = editorWidth / xSize;
   const rectHeight = editorHeight / ySize;
@@ -42,25 +53,24 @@ export const draw = () => {
           bottomLeft: cornerSize,
           bottomRight: null,
         },
+        fillColor: backgroundColor,
       });
 
       pixel.parent = parentGroup;
-      pixel.fillColor = new Color("black");
       pixels.push(pixel);
     }
   }
 
+  const getMirrorDrawingPointsInMatrixByCoords = ({ x, y }: TPoint) => [
+    new Point(x, y),
+    new Point(editorWidth - x, y),
+    new Point(x, editorHeight - y),
+    new Point(editorWidth - x, editorHeight - y),
+  ];
+
   const mirrorDraw = ({ point }: TPaperMouseEvent) => {
-    const fillColor = new Color("grey");
-
-    const { x, y } = point;
-
-    const drawPointsInMatrix: TPoint[] = [
-      { x, y },
-      { x: editorWidth - x, y },
-      { x, y: editorHeight - y },
-      { x: editorWidth - x, y: editorHeight - y },
-    ] as TPoint[];
+    const fillColor = brushColor;
+    const drawPointsInMatrix = getMirrorDrawingPointsInMatrixByCoords(point);
 
     drawPointsInMatrix.forEach(({ x, y }) => {
       const { idxX, idxY } = getPixelIndexByCoords({
@@ -73,33 +83,38 @@ export const draw = () => {
     });
   };
 
-  const selectedPixel = createRoundRectangle({
-    putOnPoint: new Point(-100, -100),
-    boxSize: sizeOfRectangle,
-    cornersSize: {
-      topLeft: null,
-      topRight: cornerSize,
-      bottomLeft: cornerSize,
-      bottomRight: null,
-    },
-  });
+  const selectedPixels = getMirrorDrawingPointsInMatrixByCoords(
+    new Point(-100, -100)
+  ).map(point =>
+    createRoundRectangle({
+      putOnPoint: point,
+      boxSize: sizeOfRectangle,
+      cornersSize: {
+        topLeft: null,
+        topRight: cornerSize,
+        bottomLeft: cornerSize,
+        bottomRight: null,
+      },
+      fillColor: brushHoverColor,
+    })
+  );
 
-  const selectColor = new Color("rgba(100,100,100,0.5)");
-  selectedPixel.fillColor = selectColor;
+  const drawSelectedPixels = ({ point }: TPaperMouseEvent) => {
+    const drawPointsInMatrix = getMirrorDrawingPointsInMatrixByCoords(point);
 
-  const drawSelectedPixel = ({ point }: TPaperMouseEvent) => {
-    const { x, y } = point;
+    selectedPixels.forEach((selectedPixel, selectedPixelIndex) => {
+      const { x, y } = drawPointsInMatrix[selectedPixelIndex];
+      const { idxX, idxY } = getPixelIndexByCoords({
+        x,
+        y,
+        ...editorParams,
+      });
 
-    const { idxX, idxY } = getPixelIndexByCoords({
-      x,
-      y,
-      ...editorParams,
+      const idx = idxX * ySize + idxY;
+
+      selectedPixel.position.x = pixels[idx].position.x;
+      selectedPixel.position.y = pixels[idx].position.y;
     });
-
-    const idx = idxX * ySize + idxY;
-
-    selectedPixel.position.x = pixels[idx].position.x;
-    selectedPixel.position.y = pixels[idx].position.y;
   };
 
   Paper.view.onMouseDown = (event: TPaperMouseEvent) => {
@@ -112,6 +127,6 @@ export const draw = () => {
   };
 
   Paper.view.onMouseMove = (event: TPaperMouseEvent) => {
-    drawSelectedPixel(event);
+    drawSelectedPixels(event);
   };
 };
