@@ -2,13 +2,13 @@ import Paper, { Color, Group, Point, Size } from "paper";
 
 import { createRoundRectangle } from "@/lib/create-round-rectangle";
 import { getPixelIndexByCoords } from "@/lib/get-pixel-index-by-coords";
-import { TPaperMouseEvent, TPath, TPoint } from "@/types";
+import { TPaperMouseEvent, TPath, TPoint, TSize } from "@/types";
 
 const editorParams = {
   editorWidth: 600,
   editorHeight: 600,
-  xSize: 61,
-  ySize: 61,
+  xSize: 31,
+  ySize: 31,
   backgroundColor: new Color("black"),
   brushColor: new Color("grey"),
   brushHoverColor: new Color("rgba(100, 100, 100, 0.5)"),
@@ -31,9 +31,14 @@ export const draw = () => {
   const pixels: TPath[] = [];
   const parentGroup = new Group();
 
-  const CORNER_RADIUS = 5;
+  const CORNER_RADIUS = 12;
   const sizeOfRectangle = new Size(rectWidth, rectHeight);
   const cornerSize = new Size(CORNER_RADIUS, CORNER_RADIUS);
+
+  const getPixel = (i: number, j: number) => {
+    const idx = i * ySize + j;
+    return pixels[idx];
+  };
 
   for (let i = 0; i < xSize; i += 1) {
     for (let j = 0; j < ySize; j += 1) {
@@ -49,8 +54,8 @@ export const draw = () => {
         boxSize: sizeOfRectangle,
         cornersSize: {
           topLeft: null,
-          topRight: cornerSize,
-          bottomLeft: cornerSize,
+          topRight: null,
+          bottomLeft: null,
           bottomRight: null,
         },
         fillColor: backgroundColor,
@@ -60,13 +65,132 @@ export const draw = () => {
       pixels.push(pixel);
     }
   }
-
   const getMirrorDrawingPointsInMatrixByCoords = ({ x, y }: TPoint) => [
     new Point(x, y),
     new Point(editorWidth - x, y),
     new Point(x, editorHeight - y),
     new Point(editorWidth - x, editorHeight - y),
   ];
+
+  const auxiliaryRoundCornersPixels: TPath[] = [];
+
+  // TODO: replace all pixels recalculation with only one
+  const redrawAuxiliaryRoundCornersPixels = () => {
+    auxiliaryRoundCornersPixels.forEach(pixel => pixel.remove());
+    auxiliaryRoundCornersPixels.length = 0;
+
+    const getAuxiliaryRoundCornersSizes = (i: number, j: number) => {
+      const cornersSize: Record<string, TSize | null> = {
+        topLeft: null,
+        topRight: null,
+        bottomLeft: null,
+        bottomRight: null,
+      };
+
+      if (i - 1 >= 0 && j - 1 >= 0) {
+        const topPixel = getPixel(i - 1, j);
+        const leftPixel = getPixel(i, j - 1);
+
+        if (
+          topPixel.fillColor?.equals(brushColor) &&
+          leftPixel.fillColor?.equals(brushColor)
+        ) {
+          cornersSize.topLeft = cornerSize;
+        }
+      }
+
+      if (i - 1 >= 0 && j + 1 <= ySize) {
+        const topPixel = getPixel(i - 1, j);
+        const rightPixel = getPixel(i, j + 1);
+
+        if (
+          topPixel.fillColor?.equals(brushColor) &&
+          rightPixel.fillColor?.equals(brushColor)
+        ) {
+          // cornersSize.topRight = cornerSize;
+          cornersSize.bottomLeft = cornerSize;
+        }
+      }
+
+      if (i + 1 <= xSize && j + 1 <= ySize) {
+        const bottomPixel = getPixel(i + 1, j);
+        const rightPixel = getPixel(i, j + 1);
+
+        if (
+          bottomPixel.fillColor?.equals(brushColor) &&
+          rightPixel.fillColor?.equals(brushColor)
+        ) {
+          cornersSize.bottomRight = cornerSize;
+        }
+      }
+
+      if (i + 1 <= xSize && j - 1 >= 0) {
+        const bottomPixel = getPixel(i + 1, j);
+        const leftPixel = getPixel(i, j - 1);
+
+        if (
+          bottomPixel.fillColor?.equals(brushColor) &&
+          leftPixel.fillColor?.equals(brushColor)
+        ) {
+          // cornersSize.bottomLeft = cornerSize;
+          cornersSize.topRight = cornerSize;
+        }
+      }
+
+      return cornersSize;
+    };
+
+    for (let i = 0; i < xSize; i += 1) {
+      for (let j = 0; j < ySize; j += 1) {
+        const position = {
+          x: i * rectWidth,
+          y: j * rectHeight,
+        };
+
+        if (getPixel(i, j).fillColor?.equals(brushColor)) {
+          continue;
+        }
+
+        const cornersSize = getAuxiliaryRoundCornersSizes(i, j);
+
+        if (
+          cornersSize.bottomLeft ||
+          cornersSize.bottomRight ||
+          cornersSize.topLeft ||
+          cornersSize.topRight
+        ) {
+          const pixelCorner = createRoundRectangle({
+            putOnPoint: new Point(position.x, position.y),
+            boxSize: sizeOfRectangle,
+            cornersSize: cornersSize,
+            // fillColor: backgroundColor,
+            fillColor: brushHoverColor,
+          });
+
+          const pixelFull = createRoundRectangle({
+            putOnPoint: new Point(position.x, position.y),
+            boxSize: sizeOfRectangle,
+            cornersSize: {
+              topLeft: null,
+              topRight: null,
+              bottomLeft: null,
+              bottomRight: null,
+            },
+            // fillColor: backgroundColor,
+            fillColor: brushColor,
+          });
+
+          const pixel = pixelFull.subtract(pixelCorner);
+
+          pixelFull.remove();
+          pixelCorner.remove();
+
+          pixel.parent = parentGroup;
+          auxiliaryRoundCornersPixels.push(pixel);
+        }
+      }
+    }
+  };
 
   const mirrorDraw = ({ point }: TPaperMouseEvent) => {
     const fillColor = brushColor;
@@ -78,9 +202,13 @@ export const draw = () => {
         y,
         ...editorParams,
       });
-      const idx = idxX * ySize + idxY;
-      pixels[idx].fillColor = fillColor;
+
+      const pixel = getPixel(idxX, idxY);
+
+      pixel.fillColor = fillColor;
     });
+
+    redrawAuxiliaryRoundCornersPixels();
   };
 
   const selectedPixels = getMirrorDrawingPointsInMatrixByCoords(
@@ -110,16 +238,15 @@ export const draw = () => {
         ...editorParams,
       });
 
-      const idx = idxX * ySize + idxY;
+      const pixel = getPixel(idxX, idxY);
 
-      selectedPixel.position.x = pixels[idx].position.x;
-      selectedPixel.position.y = pixels[idx].position.y;
+      selectedPixel.position.x = pixel.position.x;
+      selectedPixel.position.y = pixel.position.y;
     });
   };
 
   Paper.view.onMouseDown = (event: TPaperMouseEvent) => {
     mirrorDraw(event);
-    console.log(event.target.bounds);
   };
 
   Paper.view.onMouseDrag = (event: TPaperMouseEvent) => {
